@@ -3,6 +3,14 @@
 
 * deploy webhook
 
+* deploy cert-manager
+
+* deploy issuer and certificate for webhook
+
+```
+kubectl apply -f deployment/certificates
+```
+
 * once successfully deployed, deploy sample pod
 
 ```

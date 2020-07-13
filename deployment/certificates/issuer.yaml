@@ -1,0 +1,9 @@
+
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: sidecar-injector
+  namespace: sidecar-injector
+spec:
+  selfSigned: {}

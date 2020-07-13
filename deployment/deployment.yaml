@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: morvencao/sidecar-injector:latest
+          image: surajnarwade/sidecar-injector:latest
           imagePullPolicy: IfNotPresent
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
@@ -36,6 +36,11 @@ spec:
       - name: webhook-certs
         secret:
           secretName: sidecar-injector-webhook-certs
+          items:
+            - key: tls.crt
+              path: cert.pem
+            - key: tls.key
+              path: key.pem
       - name: webhook-config
         configMap:
           name: sidecar-injector-webhook-configmap

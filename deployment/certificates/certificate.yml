@@ -1,0 +1,17 @@
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: sidecar-injector
+  namespace: sidecar-injector
+spec:
+  commonName: sidecar-injector-webhook-svc.sidecar-injector.svc
+  dnsNames:
+    - sidecar-injector-webhook-svc
+    - sidecar-injector-webhook-svc.sidecar-injector
+    - sidecar-injector-webhook-svc.sidecar-injector.svc
+  privateKey:
+    rotationPolicy: Always
+  secretName: sidecar-injector-webhook-certs
+  issuerRef:
+    name: sidecar-injector
