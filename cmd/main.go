@@ -5,13 +5,31 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/golang/glog"
 )
+
+// Copied from src/net/http/server.go
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return
+	}
+	tc.SetKeepAlive(true)
+	tc.SetKeepAlivePeriod(3 * time.Minute)
+	return tc, nil
+}
 
 func main() {
 	var parameters WhSvrParameters
@@ -28,17 +46,35 @@ func main() {
 		glog.Errorf("Failed to load configuration: %v", err)
 	}
 
-	pair, err := tls.LoadX509KeyPair(parameters.certFile, parameters.keyFile)
+	kpr, err := NewKeypairReloader(parameters.certFile, parameters.keyFile)
 	if err != nil {
-		glog.Errorf("Failed to load key pair: %v", err)
+		log.Fatal(err)
 	}
+	// pair, err := tls.LoadX509KeyPair(parameters.certFile, parameters.keyFile)
+	// if err != nil {
+	// 	glog.Errorf("Failed to load key pair: %v", err)
+	// }
+
+	srv := http.Server{Addr: fmt.Sprintf(":%v", parameters.port)}
+
+	t := &tls.Config{GetCertificate: kpr.GetCertificateFunc()}
+	srv.TLSConfig = t
+
+	// ln, err := net.Listen("tcp", fmt.Sprintf(":%v", parameters.port))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
+	// go srv.Serve(tlsListener)
 
 	whsvr := &WebhookServer{
 		sidecarConfig: sidecarConfig,
-		server: &http.Server{
-			Addr:      fmt.Sprintf(":%v", parameters.port),
-			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
-		},
+		server:        &srv,
+		// server: &http.Server{
+		// 	Addr:      fmt.Sprintf(":%v", parameters.port),
+		// 	TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
+		// },
 	}
 
 	// define http server and server handler
