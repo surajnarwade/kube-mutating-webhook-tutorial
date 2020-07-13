@@ -6,30 +6,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/golang/glog"
 )
-
-// Copied from src/net/http/server.go
-type tcpKeepAliveListener struct {
-	*net.TCPListener
-}
-
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
-	tc, err := ln.AcceptTCP()
-	if err != nil {
-		return
-	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(3 * time.Minute)
-	return tc, nil
-}
 
 func main() {
 	var parameters WhSvrParameters
@@ -59,14 +42,6 @@ func main() {
 
 	t := &tls.Config{GetCertificate: kpr.GetCertificateFunc()}
 	srv.TLSConfig = t
-
-	// ln, err := net.Listen("tcp", fmt.Sprintf(":%v", parameters.port))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
-	// go srv.Serve(tlsListener)
 
 	whsvr := &WebhookServer{
 		sidecarConfig: sidecarConfig,
